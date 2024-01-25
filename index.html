@@ -1,1 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto Prices</title>
+</head>
+<body>
+    <h1>Crypto Prices</h1>
+    <div id="prices"></div>
 
+    <script>
+        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ATOMUSDT'];
+
+        window.onload = function() {
+            const pricesDiv = document.getElementById('prices');
+            symbols.forEach(symbol => {
+                fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const p = document.createElement('p');
+                        p.textContent = `${data.symbol}: ${data.price}`;
+                        pricesDiv.appendChild(p);
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        };
+    </script>
+</body>
+</html>
