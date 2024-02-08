@@ -10,13 +10,15 @@
     <button onclick="addPair()">Add Pair</button>
 
     <script>
-        let symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DYMUSDT'];
+        let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DYMUSDT'];
 
         function addPair() {
             const newPair = document.getElementById('newPair').value;
             if (newPair && !symbols.includes(newPair)) {
                 symbols.push(newPair);
+                localStorage.setItem('symbols', JSON.stringify(symbols));
                 document.getElementById('newPair').value = '';
+                fetchPrices(); // fetch prices immediately after adding new pair
             }
         }
 
