@@ -6,12 +6,23 @@
 <body>
     <h1>Crypto Prices</h1>
     <div id="prices"></div>
+    <input type="text" id="newPair" placeholder="Enter new pair">
+    <button onclick="addPair()">Add Pair</button>
 
     <script>
-        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DYMUSDT'];
+        let symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DYMUSDT'];
 
-        window.onload = function() {
+        function addPair() {
+            const newPair = document.getElementById('newPair').value;
+            if (newPair && !symbols.includes(newPair)) {
+                symbols.push(newPair);
+                document.getElementById('newPair').value = '';
+            }
+        }
+
+        function fetchPrices() {
             const pricesDiv = document.getElementById('prices');
+            pricesDiv.innerHTML = ''; // clear the div
             symbols.forEach(symbol => {
                 fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
                     .then(response => response.json())
@@ -22,6 +33,11 @@
                     })
                     .catch(error => console.error('Error:', error));
             });
+        }
+
+        window.onload = function() {
+            fetchPrices();
+            setInterval(fetchPrices, 60000); // fetch prices every minute
         };
     </script>
 </body>
