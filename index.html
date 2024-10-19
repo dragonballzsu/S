@@ -10,16 +10,20 @@
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Crypto Price Tracker</h1>
-        <div class="mb-4">
-            <input type="text" id="newCoin" placeholder="Enter coin name (e.g., BTC, ETH)" class="w-full p-2 border rounded">
+        <div class="mb-4 flex justify-between items-center">
+            <input type="text" id="newCoin" placeholder="Enter coin name (e.g., BTC, ETH)" class="w-full p-2 border rounded mr-2">
+            <button id="viewToggle" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
+                Toggle View
+            </button>
         </div>
         <div id="prices" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
 
     <script>
-        let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTC', 'ETH', 'SOL', 'SUI', 'ZK'];
+        let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTC', 'ETH', 'SOL', 'ZRO', 'ZK'];
         const baseUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=';
         const quoteAsset = 'USDT';
+        let isGridView = true;
 
         function addCoin() {
             const newCoin = document.getElementById('newCoin').value.toUpperCase();
@@ -31,12 +35,14 @@
             }
         }
 
-        function createPriceCard(data) {
+        function createPriceCard(data, isGridView) {
             const card = document.createElement('div');
-            card.className = 'bg-white rounded-lg shadow-md p-4';
+            card.className = isGridView 
+                ? 'bg-white rounded-lg shadow-md p-4 transition duration-300 hover:shadow-lg'
+                : 'bg-white rounded-lg shadow-md p-4 mb-4 transition duration-300 hover:shadow-lg';
             card.innerHTML = `
                 <h2 class="text-xl font-semibold mb-2">${data.symbol.replace(quoteAsset, '')}</h2>
-                <p class="text-2xl font-bold text-green-600">$${parseFloat(data.price).toFixed(2)}</p>
+                <p class="text-2xl font-bold text-green-600">$${parseFloat(data.price).toFixed(5)}</p>
                 <p class="text-sm text-gray-500">Last updated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}</p>
             `;
             return card;
@@ -45,11 +51,14 @@
         function fetchPrices() {
             const pricesDiv = document.getElementById('prices');
             pricesDiv.innerHTML = '';
+            pricesDiv.className = isGridView
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+                : 'space-y-4';
             symbols.forEach(symbol => {
                 fetch(`${baseUrl}${symbol}${quoteAsset}`)
                     .then(response => response.json())
                     .then(data => {
-                        const card = createPriceCard(data);
+                        const card = createPriceCard(data, isGridView);
                         pricesDiv.appendChild(card);
                     })
                     .catch(error => console.error('Error:', error));
@@ -60,6 +69,11 @@
             if (e.key === 'Enter') {
                 addCoin();
             }
+        });
+
+        document.getElementById('viewToggle').addEventListener('click', function() {
+            isGridView = !isGridView;
+            fetchPrices();
         });
 
         window.onload = function() {
