@@ -1,45 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Crypto Prices</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Price Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </head>
-<body>
-    <h1>Crypto Prices</h1>
-    <div id="prices"></div>
-    <input type="text" id="newPair" placeholder="Enter new pair">
-    <button onclick="addPair()">Add Pair</button>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Crypto Price Tracker</h1>
+        <div class="mb-4">
+            <input type="text" id="newCoin" placeholder="Enter coin name (e.g., BTC, ETH)" class="w-full p-2 border rounded">
+        </div>
+        <div id="prices" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
 
     <script>
-        let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'SUIUSDT', 'ZKUSDT'];
+        let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTC', 'ETH', 'SOL', 'SUI', 'ZK'];
+        const baseUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=';
+        const quoteAsset = 'USDT';
 
-        function addPair() {
-            const newPair = document.getElementById('newPair').value;
-            if (newPair && !symbols.includes(newPair)) {
-                symbols.push(newPair);
+        function addCoin() {
+            const newCoin = document.getElementById('newCoin').value.toUpperCase();
+            if (newCoin && !symbols.includes(newCoin)) {
+                symbols.push(newCoin);
                 localStorage.setItem('symbols', JSON.stringify(symbols));
-                document.getElementById('newPair').value = '';
-                fetchPrices(); // fetch prices immediately after adding new pair
+                document.getElementById('newCoin').value = '';
+                fetchPrices();
             }
+        }
+
+        function createPriceCard(data) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-md p-4';
+            card.innerHTML = `
+                <h2 class="text-xl font-semibold mb-2">${data.symbol.replace(quoteAsset, '')}</h2>
+                <p class="text-2xl font-bold text-green-600">$${parseFloat(data.price).toFixed(2)}</p>
+                <p class="text-sm text-gray-500">Last updated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}</p>
+            `;
+            return card;
         }
 
         function fetchPrices() {
             const pricesDiv = document.getElementById('prices');
-            pricesDiv.innerHTML = ''; // clear the div
+            pricesDiv.innerHTML = '';
             symbols.forEach(symbol => {
-                fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
+                fetch(`${baseUrl}${symbol}${quoteAsset}`)
                     .then(response => response.json())
                     .then(data => {
-                        const p = document.createElement('p');
-                        p.textContent = `${data.symbol}: ${data.price}`;
-                        pricesDiv.appendChild(p);
+                        const card = createPriceCard(data);
+                        pricesDiv.appendChild(card);
                     })
                     .catch(error => console.error('Error:', error));
             });
         }
 
+        document.getElementById('newCoin').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addCoin();
+            }
+        });
+
         window.onload = function() {
             fetchPrices();
-            setInterval(fetchPrices, 60000); // fetch prices every minute
+            setInterval(fetchPrices, 60000);
         };
     </script>
 </body>
