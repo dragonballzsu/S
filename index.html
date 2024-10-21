@@ -96,28 +96,27 @@
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
                 : 'space-y-4';
             symbols.forEach(symbol => {
-                fetch(`${baseUrl}${symbol}${quoteAsset}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const card = createPriceCard(data, isGridView);
-                        pricesDiv.appendChild(card);
-                        checkAlert(data.symbol, parseFloat(data.price));
-                    })
-                    .catch(error => console.error('Error:', error));
+        fetch(`${baseUrl}${symbol}${quoteAsset}`)
+            .then(response => response.json())
+            .then(data => {
+                const card = createPriceCard(data, isGridView);
+                pricesDiv.appendChild(card);
+                checkAlert(symbol, parseFloat(data.price));  // Changed this line
+            })
+            .catch(error => console.error('Error:', error));
             });
         }
 
         function checkAlert(symbol, price) {
-            const alertSettings = settings[symbol];
-            if (alertSettings) {
-                if (price >= alertSettings.high) {
-                    sendTelegramAlert(`${symbol} has reached or exceeded your high price alert: $${price}`);
-                } else if (price <= alertSettings.low) {
-                    sendTelegramAlert(`${symbol} has reached or fallen below your low price alert: $${price}`);
-                }
-            }
+    const alertSettings = settings[symbol];
+    if (alertSettings) {
+        if (alertSettings.high && price >= alertSettings.high) {
+            sendTelegramAlert(`${symbol} has reached or exceeded your high price alert: $${price}`);
+        } else if (alertSettings.low && price <= alertSettings.low) {
+            sendTelegramAlert(`${symbol} has reached or fallen below your low price alert: $${price}`);
         }
-
+    }
+}
         function sendTelegramAlert(message) {
             const botToken = settings.botToken;
             const chatId = settings.chatId;
