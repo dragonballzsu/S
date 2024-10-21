@@ -31,14 +31,40 @@
             <button id="viewToggle" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">
                 Toggle View
             </button>
+            <button id="settingsBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300 ml-2">
+                Settings
+            </button>
         </div>
         <div id="prices" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-dark-200 p-6 rounded-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-4">Settings</h2>
+            <div class="mb-4">
+                <label for="botToken" class="block mb-2">Telegram Bot Token:</label>
+                <input type="text" id="botToken" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+            </div>
+            <div class="mb-4">
+                <label for="chatId" class="block mb-2">Telegram Chat ID:</label>
+                <input type="text" id="chatId" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+            </div>
+            <div id="alertSettings"></div>
+            <div class="flex justify-end mt-4">
+                <button id="saveSettings" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">Save</button>
+                <button id="closeSettings" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition duration-300 ml-2">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTC', 'ETH', 'SOL', 'ZRO', 'ZK'];
         const baseUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=';
         const quoteAsset = 'USDT';
         let isGridView = true;
+        let settings = JSON.parse(localStorage.getItem('settings')) || {};
+
         function addCoin() {
             const newCoin = document.getElementById('newCoin').value.toUpperCase();
             if (newCoin && !symbols.includes(newCoin)) {
@@ -46,8 +72,10 @@
                 localStorage.setItem('symbols', JSON.stringify(symbols));
                 document.getElementById('newCoin').value = '';
                 fetchPrices();
+                updateAlertSettings();
             }
         }
+
         function createPriceCard(data, isGridView) {
             const card = document.createElement('div');
             card.className = isGridView 
@@ -60,6 +88,7 @@
             `;
             return card;
         }
+
         function fetchPrices() {
             const pricesDiv = document.getElementById('prices');
             pricesDiv.innerHTML = '';
@@ -72,19 +101,97 @@
                     .then(data => {
                         const card = createPriceCard(data, isGridView);
                         pricesDiv.appendChild(card);
+                        checkAlert(data.symbol, parseFloat(data.price));
                     })
                     .catch(error => console.error('Error:', error));
             });
         }
+
+        function checkAlert(symbol, price) {
+            const alertSettings = settings[symbol];
+            if (alertSettings) {
+                if (price >= alertSettings.high) {
+                    sendTelegramAlert(`${symbol} has reached or exceeded your high price alert: $${price}`);
+                } else if (price <= alertSettings.low) {
+                    sendTelegramAlert(`${symbol} has reached or fallen below your low price alert: $${price}`);
+                }
+            }
+        }
+
+        function sendTelegramAlert(message) {
+            const botToken = settings.botToken;
+            const chatId = settings.chatId;
+            if (botToken && chatId) {
+                const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                    }),
+                }).catch(error => console.error('Error sending Telegram alert:', error));
+            }
+        }
+
+        function updateAlertSettings() {
+            const alertSettingsDiv = document.getElementById('alertSettings');
+            alertSettingsDiv.innerHTML = '';
+            symbols.forEach(symbol => {
+                const symbolSettings = settings[symbol] || { high: '', low: '' };
+                const settingHtml = `
+                    <div class="mb-4">
+                        <h3 class="font-bold mb-2">${symbol} Alerts</h3>
+                        <div class="flex space-x-2">
+                            <input type="number" id="${symbol}-high" placeholder="High price" value="${symbolSettings.high}" class="w-1/2 p-2 bg-dark-100 border border-gray-600 rounded">
+                            <input type="number" id="${symbol}-low" placeholder="Low price" value="${symbolSettings.low}" class="w-1/2 p-2 bg-dark-100 border border-gray-600 rounded">
+                        </div>
+                    </div>
+                `;
+                alertSettingsDiv.innerHTML += settingHtml;
+            });
+        }
+
         document.getElementById('newCoin').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 addCoin();
             }
         });
+
         document.getElementById('viewToggle').addEventListener('click', function() {
             isGridView = !isGridView;
             fetchPrices();
         });
+
+        document.getElementById('settingsBtn').addEventListener('click', function() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            document.getElementById('settingsModal').classList.add('flex');
+            document.getElementById('botToken').value = settings.botToken || '';
+            document.getElementById('chatId').value = settings.chatId || '';
+            updateAlertSettings();
+        });
+
+        document.getElementById('closeSettings').addEventListener('click', function() {
+            document.getElementById('settingsModal').classList.add('hidden');
+            document.getElementById('settingsModal').classList.remove('flex');
+        });
+
+        document.getElementById('saveSettings').addEventListener('click', function() {
+            settings.botToken = document.getElementById('botToken').value;
+            settings.chatId = document.getElementById('chatId').value;
+            symbols.forEach(symbol => {
+                settings[symbol] = {
+                    high: parseFloat(document.getElementById(`${symbol}-high`).value) || null,
+                    low: parseFloat(document.getElementById(`${symbol}-low`).value) || null
+                };
+            });
+            localStorage.setItem('settings', JSON.stringify(settings));
+            document.getElementById('settingsModal').classList.add('hidden');
+            document.getElementById('settingsModal').classList.remove('flex');
+        });
+
         window.onload = function() {
             fetchPrices();
             setInterval(fetchPrices, 60000);
