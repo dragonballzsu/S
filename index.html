@@ -25,7 +25,7 @@
 </head>
 <body class="bg-dark-300 text-white min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-6 text-center text-blue-400">Crypto Price Tracker</h1>
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-400"> Price Tracker</h1>
         <div class="mb-4 flex justify-between items-center">
             <input type="text" id="newCoin" placeholder="Enter coin name (e.g., BTC, ETH)" class="w-full p-2 border rounded mr-2 bg-dark-100 text-white placeholder-gray-400 border-gray-600">
             <button id="viewToggle" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">
@@ -39,6 +39,48 @@
     </div>
 
     <!-- Settings Modal -->
+    <!-- Calculator Modal -->
+<div id="calculatorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-dark-200 p-6 rounded-lg w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold" id="calcModalTitle">Price Calculator</h2>
+            <button id="closeCalc" class="text-gray-400 hover:text-white">
+                ✕
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2">Current Price</label>
+                    <input type="text" id="currentPrice" readonly class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                </div>
+                <div>
+                    <label class="block mb-2">Multiplier</label>
+                    <input type="number" id="multiplier" value="1" min="0" step="0.1" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2">High Price</label>
+                    <input type="number" id="calcHigh" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                </div>
+                <div>
+                    <label class="block mb-2">Low Price</label>
+                    <input type="number" id="calcLow" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-dark-100 rounded">
+                <h3 class="font-bold mb-2">Calculations</h3>
+                <div id="calculations" class="space-y-2">
+                    <p>High Difference: <span id="highDiff"></span></p>
+                    <p>Low Difference: <span id="lowDiff"></span></p>
+                    <p>Multiplied Value: <span id="multipliedValue"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
         <div class="bg-dark-200 p-6 rounded-lg w-full max-w-md">
             <h2 class="text-2xl font-bold mb-4">Settings</h2>
@@ -77,17 +119,21 @@
         }
 
         function createPriceCard(data, isGridView) {
-            const card = document.createElement('div');
-            card.className = isGridView 
-                ? 'bg-dark-200 rounded-lg shadow-md p-4 transition duration-300 hover:shadow-lg'
-                : 'bg-dark-200 rounded-lg shadow-md p-4 mb-4 transition duration-300 hover:shadow-lg';
-            card.innerHTML = `
-                <h2 class="text-xl font-semibold mb-2 text-blue-300">${data.symbol.replace(quoteAsset, '')}</h2>
-                <p class="text-2xl font-bold text-green-400">$${parseFloat(data.price).toFixed(5)}</p>
-                <p class="text-sm text-gray-400">Last updated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}</p>
-            `;
-            return card;
-        }
+    const card = document.createElement('div');
+    card.className = isGridView 
+        ? 'bg-dark-200 rounded-lg shadow-md p-4 transition duration-300 hover:shadow-lg cursor-pointer'
+        : 'bg-dark-200 rounded-lg shadow-md p-4 mb-4 transition duration-300 hover:shadow-lg cursor-pointer';
+    
+    const currentPrice = parseFloat(data.price);
+    card.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2 text-blue-300">${data.symbol.replace(quoteAsset, '')}</h2>
+        <p class="text-2xl font-bold text-green-400">$${currentPrice.toFixed(5)}</p>
+        <p class="text-sm text-gray-400">Last updated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}</p>
+    `;
+    
+    card.addEventListener('click', () => showCalculatorModal(data.symbol, currentPrice));
+    return card;
+}
 
         function fetchPrices() {
             const pricesDiv = document.getElementById('prices');
@@ -152,6 +198,76 @@
                 alertSettingsDiv.innerHTML += settingHtml;
             });
         }
+
+        function showCalculatorModal(symbol, currentPrice) {
+    const modal = document.getElementById('calculatorModal');
+    const calcModalTitle = document.getElementById('calcModalTitle');
+    const currentPriceInput = document.getElementById('currentPrice');
+    const calcHigh = document.getElementById('calcHigh');
+    const calcLow = document.getElementById('calcLow');
+    
+    // Set initial values
+    calcModalTitle.textContent = `${symbol} Calculator`;
+    currentPriceInput.value = currentPrice.toFixed(5);
+    
+    // Set high/low values from settings if they exist
+    if (settings[symbol]) {
+        calcHigh.value = settings[symbol].high || '';
+        calcLow.value = settings[symbol].low || '';
+    }
+    
+    updateCalculations();
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function updateCalculations() {
+    const currentPrice = parseFloat(document.getElementById('currentPrice').value);
+    const highPrice = parseFloat(document.getElementById('calcHigh').value);
+    const lowPrice = parseFloat(document.getElementById('calcLow').value);
+    const multiplier = parseFloat(document.getElementById('multiplier').value);
+    
+    const highDiff = document.getElementById('highDiff');
+    const lowDiff = document.getElementById('lowDiff');
+    const multipliedValue = document.getElementById('multipliedValue');
+    
+    // Calculate differences
+    if (!isNaN(highPrice)) {
+        const diff = highPrice - currentPrice;
+        const percentage = (diff / currentPrice) * 100;
+        highDiff.textContent = `$${diff.toFixed(5)} (${percentage.toFixed(2)}%)`;
+    } else {
+        highDiff.textContent = 'N/A';
+    }
+    
+    if (!isNaN(lowPrice)) {
+        const diff = lowPrice - currentPrice;
+        const percentage = (diff / currentPrice) * 100;
+        lowDiff.textContent = `$${diff.toFixed(5)} (${percentage.toFixed(2)}%)`;
+    } else {
+        lowDiff.textContent = 'N/A';
+    }
+    
+    // Calculate multiplied value
+    if (!isNaN(multiplier)) {
+        const value = currentPrice * multiplier;
+        multipliedValue.textContent = `$${value.toFixed(5)}`;
+    } else {
+        multipliedValue.textContent = 'Invalid multiplier';
+    }
+}
+
+// Add event listeners
+document.getElementById('closeCalc').addEventListener('click', function() {
+    document.getElementById('calculatorModal').classList.add('hidden');
+    document.getElementById('calculatorModal').classList.remove('flex');
+});
+
+// Add these event listeners to update calculations in real-time
+['calcHigh', 'calcLow', 'multiplier'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateCalculations);
+});
 
         document.getElementById('newCoin').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
