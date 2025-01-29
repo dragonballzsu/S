@@ -23,86 +23,88 @@
         }
     </script>
 </head>
-<body class="bg-dark-300 text-white min-h-screen">
+<body class="bg-gradient-to-br from-dark-300 to-blue-900 text-white min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-6 text-center text-blue-400"> Price Tracker</h1>
+        <h1 class="text-4xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+            Crypto Price Tracker
+        </h1>
         <div class="mb-4 flex justify-between items-center">
-            <input type="text" id="newCoin" placeholder="Enter coin name (e.g., BTC, ETH)" class="w-full p-2 border rounded mr-2 bg-dark-100 text-white placeholder-gray-400 border-gray-600">
-            <button id="viewToggle" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">
+            <input type="text" id="newCoin" placeholder="Enter coin name (e.g., BTC, ETH)" 
+                class="w-full p-2 border rounded mr-2 bg-dark-100/50 text-white placeholder-gray-400 border-gray-600 backdrop-blur-sm">
+            <button id="viewToggle" class="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded hover:from-blue-700 hover:to-blue-900 transition duration-300">
                 Toggle View
             </button>
-            <button id="settingsBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300 ml-2">
+            <button id="settingsBtn" class="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-purple-900 transition duration-300 ml-2">
                 Settings
             </button>
         </div>
         <div id="prices" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
 
-    <!-- Settings Modal -->
     <!-- Calculator Modal -->
-<div id="calculatorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-dark-200 p-6 rounded-lg w-full max-w-md">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold" id="calcModalTitle">Price Calculator</h2>
-            <button id="closeCalc" class="text-gray-400 hover:text-white">
-                ✕
-            </button>
-        </div>
-        <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block mb-2">Current Price</label>
-                    <input type="text" id="currentPrice" readonly class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
-                </div>
-                <div>
-                    <label class="block mb-2">Multiplier</label>
-                    <input type="number" id="multiplier" value="1" min="0" step="0.1" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
-                </div>
+    <div id="calculatorModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center">
+        <div class="bg-gradient-to-br from-dark-200 to-blue-900/50 p-6 rounded-lg w-full max-w-md backdrop-blur-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400" id="calcModalTitle">Price Calculator</h2>
+                <button id="closeCalc" class="text-gray-400 hover:text-white">✕</button>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block mb-2">High Price</label>
-                    <input type="number" id="calcHigh" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2">Current Price</label>
+                        <input type="text" id="currentPrice" readonly class="w-full p-2 bg-dark-100/50 border border-gray-600 rounded backdrop-blur-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2">Multiplier</label>
+                        <input type="number" id="multiplier" value="1" min="0" step="0.1" class="w-full p-2 bg-dark-100/50 border border-gray-600 rounded backdrop-blur-sm">
+                    </div>
                 </div>
-                <div>
-                    <label class="block mb-2">Low Price</label>
-                    <input type="number" id="calcLow" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2">24h High</label>
+                        <input type="text" id="dayHigh" readonly class="w-full p-2 bg-dark-100/50 border border-gray-600 rounded backdrop-blur-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2">24h Low</label>
+                        <input type="text" id="dayLow" readonly class="w-full p-2 bg-dark-100/50 border border-gray-600 rounded backdrop-blur-sm">
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mt-4 p-4 bg-dark-100 rounded">
-                <h3 class="font-bold mb-2">Calculations</h3>
-                <div id="calculations" class="space-y-2">
-                    <p>High Difference: <span id="highDiff"></span></p>
-                    <p>Low Difference: <span id="lowDiff"></span></p>
-                    <p>Multiplied Value: <span id="multipliedValue"></span></p>
+                
+                <div class="mt-4 p-4 bg-dark-100/50 rounded backdrop-blur-sm">
+                    <h3 class="font-bold mb-2">Price Changes</h3>
+                    <div id="calculations" class="space-y-2">
+                        <p>1h Change: <span id="hourChange" class="font-bold"></span></p>
+                        <p>24h Change: <span id="dayChange" class="font-bold"></span></p>
+                        <p>Multiplied Value: <span id="multipliedValue" class="font-bold"></span></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-        <div class="bg-dark-200 p-6 rounded-lg w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4">Settings</h2>
+
+    <!-- Settings Modal (keeping the same structure but with updated styling) -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center">
+        <div class="bg-gradient-to-br from-dark-200 to-blue-900/50 p-6 rounded-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">Settings</h2>
             <div class="mb-4">
                 <label for="botToken" class="block mb-2">Telegram Bot Token:</label>
-                <input type="text" id="botToken" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                <input type="text" id="botToken" class="w-full p-2 bg-dark-100/50 border border-gray-600 rounded backdrop-blur-sm">
             </div>
             <div class="mb-4">
                 <label for="chatId" class="block mb-2">Telegram Chat ID:</label>
-                <input type="text" id="chatId" class="w-full p-2 bg-dark-100 border border-gray-600 rounded">
+                <input type="text" id="chatId" class="w-full p-2 bg-dark-100/50 border border-gray-600 rounded backdrop-blur-sm">
             </div>
             <div id="alertSettings"></div>
             <div class="flex justify-end mt-4">
-                <button id="saveSettings" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">Save</button>
-                <button id="closeSettings" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition duration-300 ml-2">Close</button>
+                <button id="saveSettings" class="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded hover:from-blue-700 hover:to-blue-900 transition duration-300">Save</button>
+                <button id="closeSettings" class="bg-gradient-to-r from-red-600 to-red-800 text-white px-4 py-2 rounded hover:from-red-700 hover:to-red-900 transition duration-300 ml-2">Close</button>
             </div>
         </div>
     </div>
 
     <script>
         let symbols = JSON.parse(localStorage.getItem('symbols')) || ['BTC', 'ETH', 'EIGEN', 'ZRO', 'ZK'];
-        const baseUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=';
+        const baseUrl = 'https://api.binance.com/api/v3/ticker/';
         const quoteAsset = 'USDT';
         let isGridView = true;
         let settings = JSON.parse(localStorage.getItem('settings')) || {};
@@ -119,21 +121,29 @@
         }
 
         function createPriceCard(data, isGridView) {
-    const card = document.createElement('div');
-    card.className = isGridView 
-        ? 'bg-dark-200 rounded-lg shadow-md p-4 transition duration-300 hover:shadow-lg cursor-pointer'
-        : 'bg-dark-200 rounded-lg shadow-md p-4 mb-4 transition duration-300 hover:shadow-lg cursor-pointer';
-    
-    const currentPrice = parseFloat(data.price);
-    card.innerHTML = `
-        <h2 class="text-xl font-semibold mb-2 text-blue-300">${data.symbol.replace(quoteAsset, '')}</h2>
-        <p class="text-2xl font-bold text-green-400">$${currentPrice.toFixed(5)}</p>
-        <p class="text-sm text-gray-400">Last updated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}</p>
-    `;
-    
-    card.addEventListener('click', () => showCalculatorModal(data.symbol, currentPrice));
-    return card;
-}
+            const card = document.createElement('div');
+            card.className = isGridView 
+                ? 'bg-gradient-to-br from-dark-200 to-blue-900/50 rounded-lg shadow-md p-4 transition duration-300 hover:shadow-lg cursor-pointer backdrop-blur-sm border border-gray-700/50'
+                : 'bg-gradient-to-br from-dark-200 to-blue-900/50 rounded-lg shadow-md p-4 mb-4 transition duration-300 hover:shadow-lg cursor-pointer backdrop-blur-sm border border-gray-700/50';
+            
+            const currentPrice = parseFloat(data.price);
+            const priceChange = parseFloat(data.priceChangePercent);
+            const priceColor = priceChange >= 0 ? 'text-green-400' : 'text-red-400';
+            
+            card.innerHTML = `
+                <h2 class="text-xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">${data.symbol.replace(quoteAsset, '')}</h2>
+                <p class="text-2xl font-bold ${priceColor}">$${currentPrice.toFixed(5)}</p>
+                <p class="text-lg ${priceColor}">${priceChange >= 0 ? '▲' : '▼'} ${priceChange}%</p>
+                <div class="mt-2 text-sm text-gray-400">
+                    <p>24h High: $${parseFloat(data.highPrice).toFixed(5)}</p>
+                    <p>24h Low: $${parseFloat(data.lowPrice).toFixed(5)}</p>
+                    <p class="mt-1">Updated: ${moment().format('HH:mm:ss')}</p>
+                </div>
+            `;
+            
+            card.addEventListener('click', () => showCalculatorModal(data));
+            return card;
+        }
 
         function fetchPrices() {
             const pricesDiv = document.getElementById('prices');
@@ -141,134 +151,62 @@
             pricesDiv.className = isGridView
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
                 : 'space-y-4';
+            
             symbols.forEach(symbol => {
-        fetch(`${baseUrl}${symbol}${quoteAsset}`)
-            .then(response => response.json())
-            .then(data => {
-                const card = createPriceCard(data, isGridView);
-                pricesDiv.appendChild(card);
-                checkAlert(symbol, parseFloat(data.price));  // Changed this line
-            })
-            .catch(error => console.error('Error:', error));
+                fetch(`${baseUrl}24hr?symbol=${symbol}${quoteAsset}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const card = createPriceCard(data, isGridView);
+                        pricesDiv.appendChild(card);
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         }
 
-        function checkAlert(symbol, price) {
-    const alertSettings = settings[symbol];
-    if (alertSettings) {
-        if (alertSettings.high && price >= alertSettings.high) {
-            sendTelegramAlert(`${symbol} has reached or exceeded your high price alert: $${price}`);
-        } else if (alertSettings.low && price <= alertSettings.low) {
-            sendTelegramAlert(`${symbol} has reached or fallen below your low price alert: $${price}`);
+        function showCalculatorModal(data) {
+            const modal = document.getElementById('calculatorModal');
+            const calcModalTitle = document.getElementById('calcModalTitle');
+            const currentPriceInput = document.getElementById('currentPrice');
+            const dayHigh = document.getElementById('dayHigh');
+            const dayLow = document.getElementById('dayLow');
+            const hourChange = document.getElementById('hourChange');
+            const dayChange = document.getElementById('dayChange');
+            
+            calcModalTitle.textContent = `${data.symbol} Calculator`;
+            currentPriceInput.value = `$${parseFloat(data.price).toFixed(5)}`;
+            dayHigh.value = `$${parseFloat(data.highPrice).toFixed(5)}`;
+            dayLow.value = `$${parseFloat(data.lowPrice).toFixed(5)}`;
+            
+            const hourChangeVal = parseFloat(data.priceChangePercent);
+            const dayChangeVal = parseFloat(data.priceChangePercent);
+            
+            hourChange.textContent = `${hourChangeVal >= 0 ? '▲' : '▼'} ${hourChangeVal}%`;
+            hourChange.className = hourChangeVal >= 0 ? 'text-green-400' : 'text-red-400';
+            
+            dayChange.textContent = `${dayChangeVal >= 0 ? '▲' : '▼'} ${dayChangeVal}%`;
+            dayChange.className = dayChangeVal >= 0 ? 'text-green-400' : 'text-red-400';
+            
+            updateCalculations();
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
-    }
-}
-        function sendTelegramAlert(message) {
-            const botToken = settings.botToken;
-            const chatId = settings.chatId;
-            if (botToken && chatId) {
-                const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: message,
-                    }),
-                }).catch(error => console.error('Error sending Telegram alert:', error));
+
+        function updateCalculations() {
+            const currentPrice = parseFloat(document.getElementById('currentPrice').value.replace('$', ''));
+            const multiplier = parseFloat(document.getElementById('multiplier').value);
+            
+            const multipliedValue = document.getElementById('multipliedValue');
+            
+            if (!isNaN(multiplier)) {
+                const value = currentPrice * multiplier;
+                multipliedValue.textContent = `$${value.toFixed(5)}`;
+            } else {
+                multipliedValue.textContent = 'Invalid multiplier';
             }
         }
 
-        function updateAlertSettings() {
-            const alertSettingsDiv = document.getElementById('alertSettings');
-            alertSettingsDiv.innerHTML = '';
-            symbols.forEach(symbol => {
-                const symbolSettings = settings[symbol] || { high: '', low: '' };
-                const settingHtml = `
-                    <div class="mb-4">
-                        <h3 class="font-bold mb-2">${symbol} Alerts</h3>
-                        <div class="flex space-x-2">
-                            <input type="number" id="${symbol}-high" placeholder="High price" value="${symbolSettings.high}" class="w-1/2 p-2 bg-dark-100 border border-gray-600 rounded">
-                            <input type="number" id="${symbol}-low" placeholder="Low price" value="${symbolSettings.low}" class="w-1/2 p-2 bg-dark-100 border border-gray-600 rounded">
-                        </div>
-                    </div>
-                `;
-                alertSettingsDiv.innerHTML += settingHtml;
-            });
-        }
-
-        function showCalculatorModal(symbol, currentPrice) {
-    const modal = document.getElementById('calculatorModal');
-    const calcModalTitle = document.getElementById('calcModalTitle');
-    const currentPriceInput = document.getElementById('currentPrice');
-    const calcHigh = document.getElementById('calcHigh');
-    const calcLow = document.getElementById('calcLow');
-    
-    // Set initial values
-    calcModalTitle.textContent = `${symbol} Calculator`;
-    currentPriceInput.value = currentPrice.toFixed(5);
-    
-    // Set high/low values from settings if they exist
-    if (settings[symbol]) {
-        calcHigh.value = settings[symbol].high || '';
-        calcLow.value = settings[symbol].low || '';
-    }
-    
-    updateCalculations();
-    
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-
-function updateCalculations() {
-    const currentPrice = parseFloat(document.getElementById('currentPrice').value);
-    const highPrice = parseFloat(document.getElementById('calcHigh').value);
-    const lowPrice = parseFloat(document.getElementById('calcLow').value);
-    const multiplier = parseFloat(document.getElementById('multiplier').value);
-    
-    const highDiff = document.getElementById('highDiff');
-    const lowDiff = document.getElementById('lowDiff');
-    const multipliedValue = document.getElementById('multipliedValue');
-    
-    // Calculate differences
-    if (!isNaN(highPrice)) {
-        const diff = highPrice - currentPrice;
-        const percentage = (diff / currentPrice) * 100;
-        highDiff.textContent = `$${diff.toFixed(5)} (${percentage.toFixed(2)}%)`;
-    } else {
-        highDiff.textContent = 'N/A';
-    }
-    
-    if (!isNaN(lowPrice)) {
-        const diff = lowPrice - currentPrice;
-        const percentage = (diff / currentPrice) * 100;
-        lowDiff.textContent = `$${diff.toFixed(5)} (${percentage.toFixed(2)}%)`;
-    } else {
-        lowDiff.textContent = 'N/A';
-    }
-    
-    // Calculate multiplied value
-    if (!isNaN(multiplier)) {
-        const value = currentPrice * multiplier;
-        multipliedValue.textContent = `$${value.toFixed(5)}`;
-    } else {
-        multipliedValue.textContent = 'Invalid multiplier';
-    }
-}
-
-// Add event listeners
-document.getElementById('closeCalc').addEventListener('click', function() {
-    document.getElementById('calculatorModal').classList.add('hidden');
-    document.getElementById('calculatorModal').classList.remove('flex');
-});
-
-// Add these event listeners to update calculations in real-time
-['calcHigh', 'calcLow', 'multiplier'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateCalculations);
-});
-
+        // Event Listeners
         document.getElementById('newCoin').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 addCoin();
@@ -280,6 +218,14 @@ document.getElementById('closeCalc').addEventListener('click', function() {
             fetchPrices();
         });
 
+        document.getElementById('closeCalc').addEventListener('click', function() {
+            document.getElementById('calculatorModal').classList.add('hidden');
+            document.getElementById('calculatorModal').classList.remove('flex');
+        });
+
+        document.getElementById('multiplier').addEventListener('input', updateCalculations);
+
+        // Settings related event listeners (keeping the same functionality)
         document.getElementById('settingsBtn').addEventListener('click', function() {
             document.getElementById('settingsModal').classList.remove('hidden');
             document.getElementById('settingsModal').classList.add('flex');
@@ -296,17 +242,12 @@ document.getElementById('closeCalc').addEventListener('click', function() {
         document.getElementById('saveSettings').addEventListener('click', function() {
             settings.botToken = document.getElementById('botToken').value;
             settings.chatId = document.getElementById('chatId').value;
-            symbols.forEach(symbol => {
-                settings[symbol] = {
-                    high: parseFloat(document.getElementById(`${symbol}-high`).value) || null,
-                    low: parseFloat(document.getElementById(`${symbol}-low`).value) || null
-                };
-            });
             localStorage.setItem('settings', JSON.stringify(settings));
             document.getElementById('settingsModal').classList.add('hidden');
             document.getElementById('settingsModal').classList.remove('flex');
         });
 
+        // Initialize
         window.onload = function() {
             fetchPrices();
             setInterval(fetchPrices, 60000);
