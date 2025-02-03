@@ -272,30 +272,83 @@
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
                 : 'space-y-4';
             
-            symbols.forEach(symbol => {
-                fetch(`${baseUrl}24hr?symbol=${symbol}${quoteAsset}`)
+            // Create a map to store promises for each symbol
+            const pricePromises = new Map();
+            
+            // Create placeholders for all symbols in the correct order
+            symbols.forEach((symbol, index) => {
+                const placeholder = document.createElement('div');
+                placeholder.setAttribute('data-symbol', symbol);
+                placeholder.setAttribute('data-index', index);
+                pricesDiv.appendChild(placeholder);
+                
+                // Store the fetch promise for each symbol
+                const promise = fetch(`${baseUrl}24hr?symbol=${symbol}${quoteAsset}`)
                     .then(response => response.json())
                     .then(data => {
-                        const card = createPriceCard(data, isGridView);
-                        pricesDiv.appendChild(card);
-                        checkPriceAlerts(data);
+                        return { data, symbol };
                     })
                     .catch(error => {
                         console.error('Error:', error);
+                        return { error, symbol };
+                    });
+                
+                pricePromises.set(symbol, promise);
+            });
+
+            // Process all promises and update placeholders
+            Promise.all(pricePromises.values()).then(results => {
+                results.forEach(result => {
+                    const placeholder = pricesDiv.querySelector(`[data-symbol="${result.symbol}"]`);
+                    if (!placeholder) return;
+
+                    if (result.error) {
+                        // Create error card
                         const errorCard = document.createElement('div');
                         errorCard.className = isGridView 
                             ? 'bg-gradient-to-br from-red-900/50 to-dark-200 rounded-lg shadow-md p-4 transition duration-300 backdrop-blur-sm border border-red-700/50'
                             : 'bg-gradient-to-br from-red-900/50 to-dark-200 rounded-lg shadow-md p-4 mb-4 transition duration-300 backdrop-blur-sm border border-red-700/50';
                         errorCard.innerHTML = `
-                            <h2 class="text-xl font-semibold mb-2 text-red-400">${symbol}</h2>
+                            <h2 class="text-xl font-semibold mb-2 text-red-400">${result.symbol}</h2>
                             <p class="text-red-300">Failed to fetch price data</p>
                         `;
-                        pricesDiv.appendChild(errorCard);
-                    });
+                        placeholder.replaceWith(errorCard);
+                    } else {
+                        // Create price card
+                        const card = createPriceCard(result.data, isGridView);
+                        placeholder.replaceWith(card);
+                        checkPriceAlerts(result.data);
+                    }
+                });
             });
             
             updateLastRefreshTime();
         }
+
+        // Modify the create price card function to help with pinning
+        function createPriceCard(data, isGridView) {
+            const card = document.createElement('div');
+            card.className = isGridView 
+                ? 'bg-gradient-to-br from-dark-200 to-blue-900/50 rounded-lg shadow-md p-4 transition duration-300 hover:shadow-lg cursor-pointer backdrop-blur-sm border border-gray-700/50'
+                : 'bg-gradient-to-br from-dark-200 to-blue-900/50 rounded-lg shadow-md p-4 mb-4 transition duration-300 hover:shadow-lg cursor-pointer backdrop-blur-sm border border-gray-700/50';
+            
+            const symbol = data.symbol.replace(quoteAsset, '');
+            const currentPrice = parseFloat(data.lastPrice);
+            const priceChange = parseFloat(data.priceChangePercent);
+            const priceColor = priceChange >= 0 ? 'text-green-400' : 'text-red-400';
+            
+            card.setAttribute('data-symbol', symbol);
+            card.innerHTML = `
+                <h2 class="text-xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">${symbol}</h2>
+                <p class="text-2xl font-bold ${priceColor}">$${currentPrice.toFixed(5)}</p>
+                <p class="text-lg ${priceColor}">${priceChange >= 0 ? '▲' : '▼'} ${priceChange}%</p>
+                <p class="mt-1 text-sm text-gray-400">24h Volume: ${parseInt(data.volume).toLocaleString()} ${symbol}</p>
+            `;
+            
+            card.addEventListener('click', () => showCalculatorModal(data));
+            return card;
+        }
+        
 
         function startPriceRefresh() {
             if (refreshIntervalId) {
